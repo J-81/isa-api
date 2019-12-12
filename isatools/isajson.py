@@ -152,20 +152,40 @@ def load(fp):
         except KeyError:
             pass
         for study_characteristics_category_json in study_json["characteristicCategories"]:
-            characteristic_category = OntologyAnnotation(
-                id_=study_characteristics_category_json["@id"],
-                term=study_characteristics_category_json["characteristicType"]["annotationValue"],
-                term_source=term_source_dict[study_characteristics_category_json["characteristicType"]["termSource"]],
-                term_accession=study_characteristics_category_json["characteristicType"]["termAccession"],
-            )
-            study.characteristic_categories.append(characteristic_category)
-            categories_dict[characteristic_category.id] = characteristic_category
+            try:
+                if isinstance(study_characteristics_category_json["characteristicType"], int):
+                    # print("study characteristics with annotation value: ",
+                    #       study_characteristics_category_json["characteristicType"])
+                    characteristic_category = OntologyAnnotation(
+                        id_=study_characteristics_category_json["@id"],
+                        term=study_characteristics_category_json["characteristicType"],
+                        term_source=term_source_dict[study_characteristics_category_json["characteristicType"]],
+                        term_accession=study_characteristics_category_json["characteristicType"],
+                    )
+                    study.characteristic_categories.append(characteristic_category)
+                    categories_dict[characteristic_category.id] = characteristic_category
+                else:
+                    # print("study characteristics without AV is: ",
+                    #       study_characteristics_category_json["characteristicType"].keys())
+                    # print(study_characteristics_category_json["characteristicType"]["annotationValue"])
+                    characteristic_category = OntologyAnnotation(
+                        id_=study_characteristics_category_json["@id"],
+                        term=study_characteristics_category_json["characteristicType"]["annotationValue"],
+                        term_source=term_source_dict[
+                            study_characteristics_category_json["characteristicType"]["termSource"]],
+                        term_accession=study_characteristics_category_json["characteristicType"]["termAccession"],
+                    )
+                    study.characteristic_categories.append(characteristic_category)
+                    categories_dict[characteristic_category.id] = characteristic_category
+            except KeyError as ke:
+                print(ke)
         for study_unit_json in study_json["unitCategories"]:
             unit = OntologyAnnotation(id_=study_unit_json["@id"],
                                       term=study_unit_json["annotationValue"],
                                       term_source=term_source_dict[study_unit_json["termSource"]],
                                       term_accession=study_unit_json["termAccession"])
             units_dict[unit.id] = unit
+            print("unit as found: ", unit.term)
             study.units.append(unit)
         for study_publication_json in study_json["publications"]:
             study_publication = Publication(
@@ -280,7 +300,8 @@ def load(fp):
                     try:
                         unit = units_dict[characteristic_json["unit"]["@id"]]
                     except KeyError:
-                        unit = None
+                        # unit = None
+                        unit = characteristic_json["unit"]
                 elif not isinstance(value, str):
                     raise IOError("Unexpected type in characteristic value")
                 characteristic.value = value
@@ -310,7 +331,8 @@ def load(fp):
                     try:
                         unit = units_dict[characteristic_json["unit"]["@id"]]
                     except KeyError:
-                        unit = None
+                        # unit = None
+                        unit = characteristic_json["unit"]
                 elif not isinstance(value, str):
                     raise IOError("Unexpected type in characteristic value")
                 characteristic.value = value
@@ -1561,7 +1583,8 @@ class ISAJSONEncoder(JSONEncoder):
             )
 
         def get_ontology_annotation(o):
-            if o is not None:
+            if o is not None  and isinstance(o,OntologyAnnotation):
+                # print("some value: ", o)
                 return clean_nulls(
                     {
                         "@id": id_gen(o),
@@ -1571,6 +1594,9 @@ class ISAJSONEncoder(JSONEncoder):
                         "comments": get_comments(o.comments)
                     }
                 )
+            elif o is not None and isinstance(o, Characteristic):
+                print("some numerical value: ", o.value)
+                return o.value
             else:
                 return None
 

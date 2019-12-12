@@ -113,6 +113,9 @@ def create_descriptor():
     ncbitaxon = OntologySource(name='NCBITaxon', description="NCBI Taxonomy")
     investigation.ontology_source_references.append(ncbitaxon)
 
+    uo = OntologySource(name="UO", description="Unit Ontology")
+    investigation.ontology_source_references.append(uo)
+
     characteristic_organism = Characteristic(
         category=OntologyAnnotation(term="Organism"),
         value=OntologyAnnotation(
@@ -123,6 +126,17 @@ def create_descriptor():
 
     # Adding the description to the ISA Source Material:
     source.characteristics.append(characteristic_organism)
+
+    u = OntologyAnnotation(term="kilogram", term_accession="http://example.com/kilogram", term_source=uo)
+
+    c = Characteristic(category=OntologyAnnotation(term="weight"),
+                       value=74,
+                       unit=u)
+    source.characteristics.append(c)
+    #print(c)
+    study.units.append(u)
+    study.characteristic_categories.append(c)
+
 
     # declaring a new ontology and adding it to the list of resources used
     uberon = OntologySource(name='UBERON', description='Uber Anatomy Ontology')
