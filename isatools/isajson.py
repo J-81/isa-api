@@ -334,6 +334,7 @@ def load(fp):
                     except KeyError:
                         # unit = None
                         unit = characteristic_json["unit"]
+                        # unit = characteristic_json.get('unit', None)
                 elif not isinstance(value, str):
                     raise IOError("Unexpected type in characteristic value")
                 characteristic.value = value
