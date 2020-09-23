@@ -1111,10 +1111,80 @@ def _longest_path_and_attrs(paths):
     return longest[1]
 
 
-def _all_end_to_end_paths(G, start_nodes):
+def worker(inqueue, output):
+    result = []
+    for G, start, ends in iter(inqueue.get, None):
+        for path in nx.all_simple_paths(G, source=start, target=ends, cutoff=None):
+            result.append(path)
+    output.put(result)
+
+
+def _all_end_to_end_paths_with_multiprocessing(G, start_nodes):
     """Find all the end-to-end complete paths using a networkx algorithm that
     uses a modified depth-first search to generate the paths
 
+    :param G: A DiGraph of all the assay graphs from the process sequences
+    :param start_nodes: A list of start nodes
+    :return: A list of paths from the start nodes
+    """
+    # we know graphs start with Source or Sample and end with Process
+    paths = []
+    num_start_nodes = len(start_nodes)
+    message = 'Calculating for paths for {} start nodes: '.format(
+        num_start_nodes)
+    if isinstance(start_nodes[0], Source):
+        message = 'Calculating for paths for {} sources: '.format(
+            num_start_nodes)
+    elif isinstance(start_nodes[0], Sample):
+        message = 'Calculating for paths for {} samples: '.format(
+            num_start_nodes)
+    if isa_logging.show_pbars:
+        pbar = ProgressBar(
+            min_value=0, max_value=num_start_nodes, widgets=[
+                message, SimpleProgress(), Bar(left=" |", right="| "),
+                ETA()]).start()
+    else:
+        def pbar(x): return x
+
+    import multiprocessing as mp
+    inqueue = mp.Queue()
+
+    for start in pbar(start_nodes):
+        # Find ends
+        ends = []
+        start_descendants = nx.algorithms.descendants(G, start)
+        if isinstance(start, Source):
+            # only look for Sample ends if start is a Source
+            ends = [x for x in start_descendants if
+                    isinstance(x, Sample) and len(G.out_edges(x)) == 0]
+        elif isinstance(start, Sample):
+            # only look for Process ends if start is a Sample
+            ends = [x for x in start_descendants if
+                    isinstance(x, Process) and x.next_process is None]
+        inqueue.put((G, start, ends))
+
+    output = mp.Queue()
+    procs = [mp.Process(target=worker, args=(inqueue, output))
+             for _ in range(mp.cpu_count())]
+    for proc in procs:
+        proc.daemon = True
+        proc.start()
+    for _ in procs:
+        inqueue.put(None)
+    for _ in procs:
+        paths.extend(output.get())
+    for proc in procs:
+        proc.join()
+
+    log.info("Found {} paths!".format(len(paths)))
+    if len(paths) == 0:
+        log.debug([x.name for x in start_nodes])
+    return paths
+
+
+def _all_end_to_end_paths(G, start_nodes):
+    """Find all the end-to-end complete paths using a networkx algorithm that
+    uses a modified depth-first search to generate the paths
     :param G: A DiGraph of all the assay graphs from the process sequences
     :param start_nodes: A list of start nodes
     :return: A list of paths from the start nodes
