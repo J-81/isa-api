@@ -16,11 +16,14 @@ import os
 import re
 import shutil
 import tempfile
+
+
 from bisect import bisect_left, bisect_right
 from io import StringIO
 from itertools import tee, zip_longest
 
 import iso8601
+import multiprocessing
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -53,6 +56,7 @@ from isatools.model import (
 )
 
 from isatools.utils import utf8_text_file_open
+
 
 
 log = logging.getLogger('isatools')
@@ -1104,8 +1108,8 @@ def _longest_path_and_attrs(paths):
                     length += 1
                 if n.name != '':
                     length += 1
-            if n.comments is not None:
-                length += len(n.comments)
+            # if n.comments is not None:
+            #     length += len(n.comments)
         if length > longest[0]:
             longest = (length, path)
     return longest[1]
@@ -1359,10 +1363,15 @@ def write_assay_table_files(inv_obj, output_dir, write_factor_values=False):
     the Factor Value columns in the assay tables
     :return: None
     """
+    # - 1 to prevent throttling
+    cpu_count = multiprocessing.cpu_count()-1
+    p = multiprocessing.Pool(processes=cpu_count)
 
     if not isinstance(inv_obj, Investigation):
         raise NotImplementedError
+
     for study_obj in inv_obj.studies:
+
         for assay_obj in study_obj.assays:
             if assay_obj.graph is None:
                 break
@@ -1373,11 +1382,24 @@ def write_assay_table_files(inv_obj, output_dir, write_factor_values=False):
             columns = []
 
             # start_nodes, end_nodes = _get_start_end_nodes(assay_obj.graph)
-            paths = _all_end_to_end_paths(
-                assay_obj.graph, [x for x in assay_obj.graph.nodes()
-                                  if isinstance(x, Sample)])
+
+            #trying out with multiprocessing
+            results = [p.apply_async(_all_end_to_end_paths, args=(assay_obj.graph, [x for x in assay_obj.graph.nodes() if
+                     isinstance(x, Sample)])) ]
+
+            print("RESULTS?:", results)
+
+            paths = [pp.get() for pp in results]
+            for path in paths:
+                print(path)
+            # print("PATHSs size?:",paths)
+
+            # paths = _all_end_to_end_paths(
+            #     assay_obj.graph, [x for x in assay_obj.graph.nodes()
+            #                       if isinstance(x, Sample)])
+
             if len(paths) == 0:
-                log.info("No paths found, skipping writing assay file")
+                # log.info("No paths found, skipping writing assay file")
                 continue
             if _longest_path_and_attrs(paths) is None:
                 raise IOError(
