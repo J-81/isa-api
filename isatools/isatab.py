@@ -1227,6 +1227,8 @@ def write_study_table_files(inv_obj, output_dir):
                         olabel, x), node.comments))
                 columns += flatten(map(lambda x: get_fv_columns(olabel, x),
                                        node.factor_values))
+            else:
+                print("bonjour\n")
 
         omap = get_object_column_map(columns, columns)
         # load into dictionary
@@ -1387,11 +1389,11 @@ def write_assay_table_files(inv_obj, output_dir, write_factor_values=False):
             results = [p.apply_async(_all_end_to_end_paths, args=(assay_obj.graph, [x for x in assay_obj.graph.nodes() if
                      isinstance(x, Sample)])) ]
 
-            print("RESULTS?:", results)
+            # print("RESULTS?:", results)
 
             paths = [pp.get() for pp in results]
-            for path in paths:
-                print(path)
+            # for path in paths:
+            #     print(path)
             # print("PATHSs size?:",paths)
 
             # paths = _all_end_to_end_paths(
