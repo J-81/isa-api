@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import os
 import csv
 from collections import OrderedDict
@@ -41,7 +42,7 @@ def load_terms_from_mtblds_owl():
         subclasses = list(mtbls_class.transitive_subjects(RDFS.subClassOf))
 
         for c in subclasses:
-            l = list(c.objects(RDFS.label))
+            # l = list(c.objects(RDFS.label))
             # print("class name:", c.label(), "| uri: ", c)
             if str(c.label()) not in class_labels:
                 class_labels.append(str(c.label()))
@@ -55,7 +56,8 @@ def load_terms_from_mtblds_owl():
 def build_params(protocol_row_record, assay_dictionary, datafr):
     """
     a method too build an isa-create-mode assay dictionary
-    :protocol_param protocol_row_record: a row corresponding to a protocol workflow definition  as found MTBLSAssayMaster.tsv
+    :protocol_param protocol_row_record: a row corresponding to a protocol workflow definition
+    as found MTBLSAssayMaster.tsv
     :protocol_param assay_dictionary: an isa-create-mode assay dictionary stub
     :protocol_param datafr: a pandas dataframe obtained from looking up sheet in StudyTerms4Curators-template.xlsx
     :return:
@@ -65,21 +67,98 @@ def build_params(protocol_row_record, assay_dictionary, datafr):
     # print("from ontology:", class_names)
 
     for element in protocol_row_record:
+        workflow_segment = []
         if element is not "" and "|" in element:
             (protocol_type, parameters) = element.split("|")
             protocol_type = protocol_type.lower()
-            workflow_segment = {protocol_type: []}
+            workflow_segment.append({"term": protocol_type, "iri": None, "source": None})
 
-            param_setup = {}
+            if "sample collection" in protocol_type:
+                node_type = ["sample",
+                             {
+                                 "node_type": "sample",
+                                 "characteristics_category": "sample type",
+                                 "characteristics_value": {
+                                     "options": ["aliquot", "other"],
+                                     "values": []
+                                 },
+                                 "is_input_to_next_protocols": {
+                                     "value": True
+                                 }
+                             }]
+            elif "extraction" in protocol_type:
+                node_type = ["extract",
+                    {
+                        "node_type": "extract",
+                        "characteristics_category": "extract type",
+                        "characteristics_value": {
+                            "options": ["polar fraction", "nonpolar fraction"],
+                            "values": []
+                        },
+                        "is_input_to_next_protocols": {
+                            "value": True
+                        }
+                    }]
+            elif "labeling" in protocol_type or "labelling" in protocol_type:
+                node_type = [
+                "labeled extract",
+                    {
+                        "node_type": "labeled extract",
+                        "characteristics_category": "labelled extract type",
+                        "characteristics_value": {
+                            "options": [
+                                "label_0", "label_1"
+                            ],
+                            "values": []
+                        },
+                        "is_input_to_next_protocols": {
+                            "value": True
+                        }
+                    }
+                ]
+            elif "nmr spectroscopy" in protocol_type:
+                node_type = [
+                            {
+                                "term": "raw spectral data file",
+                                "iri": "http://nmrML.org/nmrCV#NMR:1400119",
+                                "source": None
+                            },
+                            {
+                                "node_type": "data file",
+                                "is_input_to_next_protocols": {
+                                    "value": True
+                                }
+                            }
+                        ]
+            elif "mass spectrometry" in protocol_type:
+                node_type = [
+                            {
+                                "term": "raw spectral data file",
+                                "iri": "http://purl.obolibrary.org/obo/MS_1003083",
+                                "source": None
+                            },
+                            {
+                                "node_type": "data file",
+                                "is_input_to_next_protocols": {
+                                    "value": True
+                                }
+                            }
+                        ]
+            else:
+                node_type = None
+
             protocol_params = parameters.split(";")
+            param_setup = {}
 
             if len(protocol_params) > 0 and protocol_params[0] is not "":
 
+                param_setup["replicates"] = {
+                        "value": 1
+                    }
+
                 for protocol_param in protocol_params:
+                    # print("This particular protocol parameter:", protocol_param)
                     param_setup[protocol_param] = {"options": [], "values": []}
-
-                    print("This particular protocol parameter:", protocol_param)
-
                     # checking if protocol parameter name is also present in the ontology
                     # if protocol_param in class_names:
                     #     print("protocol_param: ", protocol_param, "|", class_names)
@@ -99,36 +178,37 @@ def build_params(protocol_row_record, assay_dictionary, datafr):
                     # from the relevant assay spreadsheet
                     for field in datafr.columns:
 
-                        # [print("TOTO:", field, c) for c in associated_subclasses if c.label() in field]
-                        # print("PRAM:", protocol_param)
                         if protocol_param in field:
-                            # param_options = []
-                            param_setup[protocol_param]["options"] = []
-                            # param_settings = []
+
+                            for c in associated_subclasses:
+                                if c.label() in field:
+                                    iri = str(c.identifier)
+                                    assay_dictionary["@context"][protocol_param] = iri
+
                             for value in datafr[field].unique():
                                 option = {"term": "", "iri": None, "source": None}
                                 if pd.isna(value) is False:
-                                    # print("parameter value:", value) value.isdigit()
                                     if isinstance(value, int) is False or isinstance(value, float) is False:
-                                        # param_values.append("OntologyAnnotation(term='" + str(value) + "')")
                                         option["term"] = str(value)
                                         for c in associated_subclasses:
                                             if c.label() in field:
                                                 option["iri"] = str(c.identifier)
-                                        # option["iri"] = str(value)
                                         param_setup[protocol_param]["options"].append(option)
 
                                     else:
                                         option["term"] = value
                                         param_setup[protocol_param]["options"].append(option)
-                                        # param_setup[protocol_param]["options"]["term"].append(str(value))
-                                        # param_setup[protocol_param]["options"].append(value)
+                else:
+                    param_setup["replicates"] = {
+                        "value": 1
+                    }
 
-                            # param_value["OntologyAnnotation(TERM='" + protocol_param + "')"] = param_values
-                            # param_value[protocol_param] = param_values
+                workflow_segment.append(param_setup)
 
-            workflow_segment[protocol_type] = param_setup
             assay_dictionary["workflow"].append(workflow_segment)
+            if node_type is not None:
+                    assay_dictionary["workflow"].append(node_type)
+
     return assay_dictionary
 
 
@@ -157,16 +237,15 @@ def parse_mtbls_assay_def(file):
                         assay_dict["measurement_type"] = "metabolite profiling"
                         assay_dict["technology_type"] = "NMR spectroscopy"
                         assay_dict["workflow"] = []
+                        assay_dict["@context"] = {"measurement type": "http://purl.obolibrary.org/obo/OBI_0000070",
+                                                  "technology type": "http://www.ebi.ac.uk/efo/EFO_0005521"}
                         # obtain the list of parameter values by doing the lookup
                         param_df = pd.read_excel(XLS_LOOKUP, 'NMR Study')
 
                         assay_dict = build_params(protocol_row, assay_dict, param_df)
-                        assay_dict["raw_spectral_data_file"] = "[{'node_type': 'DATA_FILE','size': 1," \
-                                                               "'technical_replicates': 1," \
-                                                               "'is_input_to_next_protocols': False}]"
                         all_assays.append(assay_dict)
 
-                        counter+= 1
+                        counter += 1
 
                     if "LC-MS" in tech_type:
                         assay_dict["id"] = counter
@@ -176,12 +255,11 @@ def parse_mtbls_assay_def(file):
                         assay_dict["measurement_type"] = "metabolite profiling"
                         assay_dict["technology_type"] = "liquid chromatography mass spectrometry"
                         assay_dict["workflow"] = []
+                        assay_dict["@context"] = {"measurement type": "http://purl.obolibrary.org/obo/OBI_0000070",
+                                                  "technology type": "http://www.ebi.ac.uk/efo/EFO_0005521"}
                         # obtain the list of parameter values by doing the lookup
                         param_df = pd.read_excel(XLS_LOOKUP, 'LC-MS Study')
                         assay_dict = build_params(protocol_row, assay_dict, param_df)
-                        assay_dict["raw_spectral_data_file"] = "[{'node_type': 'DATA_FILE','size': 1," \
-                                                               "'technical_replicates': 1," \
-                                                               "'is_input_to_next_protocols': False}]"
                         all_assays.append(assay_dict)
                         counter += 1
 
@@ -193,12 +271,11 @@ def parse_mtbls_assay_def(file):
                         assay_dict["measurement_type"] = "metabolite profiling"
                         assay_dict["technology_type"] = "gas chromatography mass spectrometry"
                         assay_dict["workflow"] = []
+                        assay_dict["@context"] = {"measurement type": "http://purl.obolibrary.org/obo/OBI_0000070",
+                                                  "technology type": "http://www.ebi.ac.uk/efo/EFO_0005521"}
                         # obtain the list of parameter values by doing the lookup
                         param_df = pd.read_excel(XLS_LOOKUP, "GC-MS Study")
                         assay_dict = build_params(protocol_row, assay_dict, param_df)
-                        assay_dict["raw_spectral_data_file"] = "[{'node_type': 'DATA_FILE','size': 1," \
-                                                               "'technical_replicates': 1," \
-                                                               "'is_input_to_next_protocols': False}]"
                         all_assays.append(assay_dict)
                         counter += 1
 
@@ -210,12 +287,11 @@ def parse_mtbls_assay_def(file):
                         assay_dict["measurement_type"] = "metabolite profiling"
                         assay_dict["technology_type"] = "direct infusion mass spectrometry"
                         assay_dict["workflow"] = []
+                        assay_dict["@context"] = {"measurement type": "http://purl.obolibrary.org/obo/OBI_0000070",
+                                                  "technology type": "http://www.ebi.ac.uk/efo/EFO_0005521"}
                         # obtain the list of parameter values by doing the lookup
                         param_df = pd.read_excel(XLS_LOOKUP, "DI-MS Study")
                         assay_dict = build_params(protocol_row, assay_dict, param_df)
-                        assay_dict["raw_spectral_data_file"] = "[{'node_type': 'DATA_FILE','size': 1," \
-                                                               "'technical_replicates': 1," \
-                                                               "'is_input_to_next_protocols': False}]"
                         all_assays.append(assay_dict)
                         counter += 1
 
@@ -227,12 +303,11 @@ def parse_mtbls_assay_def(file):
                         assay_dict["measurement_type"] = "metabolite profiling"
                         assay_dict["technology_type"] = "flow injection mass spectrometry"
                         assay_dict["workflow"] = []
+                        assay_dict["@context"] = {"measurement type": "http://purl.obolibrary.org/obo/OBI_0000070",
+                                                  "technology type": "http://www.ebi.ac.uk/efo/EFO_0005521"}
                         # obtain the list of parameter values by doing the lookup
                         param_df = pd.read_excel(XLS_LOOKUP, "FIA-MS Study")
                         assay_dict = build_params(protocol_row, assay_dict, param_df)
-                        assay_dict["raw_spectral_data_file"] = "[{'node_type': 'DATA_FILE','size': 1," \
-                                                               "'technical_replicates': 1," \
-                                                               "'is_input_to_next_protocols': False}]"
                         all_assays.append(assay_dict)
                         counter += 1
 
@@ -244,12 +319,11 @@ def parse_mtbls_assay_def(file):
                         assay_dict["measurement_type"] = "metabolite profiling"
                         assay_dict["technology_type"] = "capillary electrophoresis mass spectrometry"
                         assay_dict["workflow"] = []
+                        assay_dict["@context"] = {"measurement type": "http://purl.obolibrary.org/obo/OBI_0000070",
+                                                  "technology type": "http://www.ebi.ac.uk/efo/EFO_0005521"}
                         # obtain the list of parameter values by doing the lookup
                         param_df = pd.read_excel(XLS_LOOKUP, "CE-MS Study")
                         assay_dict = build_params(protocol_row, assay_dict, param_df)
-                        assay_dict["raw_spectral_data_file"] = "[{'node_type': 'DATA_FILE','size': 1," \
-                                                               "'technical_replicates': 1," \
-                                                               "'is_input_to_next_protocols': False}]"
                         all_assays.append(assay_dict)
                         counter += 1
 
@@ -261,12 +335,11 @@ def parse_mtbls_assay_def(file):
                         assay_dict["measurement_type"] = "metabolite profiling"
                         assay_dict["technology_type"] = "maldi mass spectrometry"
                         assay_dict["workflow"] = []
+                        assay_dict["@context"] = {"measurement type": "http://purl.obolibrary.org/obo/OBI_0000070",
+                                                  "technology type": "http://www.ebi.ac.uk/efo/EFO_0005521"}
                         # obtain the list of parameter values by doing the lookup
                         param_df = pd.read_excel(XLS_LOOKUP, "MALDI-MS Study")
                         assay_dict = build_params(protocol_row, assay_dict, param_df)
-                        assay_dict["raw_spectral_data_file"] = "[{'node_type': 'DATA_FILE','size': 1," \
-                                                               "'technical_replicates': 1," \
-                                                               "'is_input_to_next_protocols': False}]"
                         all_assays.append(assay_dict)
                         counter += 1
 
@@ -278,12 +351,11 @@ def parse_mtbls_assay_def(file):
                         assay_dict["measurement_type"] = "metabolite profiling"
                         assay_dict["technology_type"] = "solid-phase extraction ion mobility mass spectrometry"
                         assay_dict["workflow"] = []
+                        assay_dict["@context"] = {"measurement type": "http://purl.obolibrary.org/obo/OBI_0000070",
+                                                  "technology type": "http://www.ebi.ac.uk/efo/EFO_0005521"}
                         # obtain the list of parameter values by doing the lookup
                         param_df = pd.read_excel(XLS_LOOKUP, "SPE-IMS-MS Study")
                         assay_dict = build_params(protocol_row, assay_dict, param_df)
-                        assay_dict["raw_spectral_data_file"] = "[{'node_type': 'DATA_FILE','size': 1," \
-                                                               "'technical_replicates': 1," \
-                                                               "'is_input_to_next_protocols': False}]"
                         all_assays.append(assay_dict)
                         counter += 1
 
@@ -295,29 +367,27 @@ def parse_mtbls_assay_def(file):
                         assay_dict["measurement_type"] = "metabolite profiling"
                         assay_dict["technology_type"] = "tandem gas chromatography mass spectrometry"
                         assay_dict["workflow"] = []
+                        assay_dict["@context"] = {"measurement type": "http://purl.obolibrary.org/obo/OBI_0000070",
+                                                  "technology type": "http://www.ebi.ac.uk/efo/EFO_0005521"}
                         # obtain the list of parameter values by doing the lookup
                         param_df = pd.read_excel(XLS_LOOKUP, "GCxGC-MS Study")
                         assay_dict = build_params(protocol_row, assay_dict, param_df)
-                        assay_dict["raw_spectral_data_file"] = "[{'node_type': 'DATA_FILE','size': 1," \
-                                                               "'technical_replicates': 1," \
-                                                               "'is_input_to_next_protocols': False}]"
                         all_assays.append(assay_dict)
                         counter += 1
 
                     if "LC-DAD" in tech_type:
                         assay_dict["id"] = counter
-                        assay_dict["name"] = "metabolite profiling by LC-DAD-MS"
+                        assay_dict["name"] = "metabolite profiling by LC-DAD"
                         assay_dict["icon"] = "fas fa-chart-bar"
                         assay_dict["color"] = "light-blue"
                         assay_dict["measurement_type"] = "metabolite profiling"
-                        assay_dict["technology_type"] = "liquid chromatography diode-array-detector mass spectrometry"
+                        assay_dict["technology_type"] = "liquid chromatography diode-array-detector"
                         assay_dict["workflow"] = []
+                        assay_dict["@context"] = {"measurement type": "http://purl.obolibrary.org/obo/OBI_0000070",
+                                                  "technology type": "http://www.ebi.ac.uk/efo/EFO_0005521"}
                         # obtain the list of parameter values by doing the lookup
                         param_df = pd.read_excel(XLS_LOOKUP, "LC-DAD Study")
                         assay_dict = build_params(protocol_row, assay_dict, param_df)
-                        assay_dict["raw_spectral_data_file"] = "[{'node_type': 'DATA_FILE','size': 1," \
-                                                               "'technical_replicates': 1," \
-                                                               "'is_input_to_next_protocols': False}]"
                         all_assays.append(assay_dict)
                         counter += 1
 
