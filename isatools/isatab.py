@@ -1111,7 +1111,7 @@ def _longest_path_and_attrs(paths):
     return longest[1]
 
 
-def _all_end_to_end_paths(G, start_nodes):
+def _all_end_to_end_paths(Gs, start_nodes):
     """Find all the end-to-end complete paths using a networkx algorithm that
     uses a modified depth-first search to generate the paths
 
@@ -1137,18 +1137,21 @@ def _all_end_to_end_paths(G, start_nodes):
                 ETA()]).start()
     else:
         def pbar(x): return x
-    for start in pbar(start_nodes):
-        # Find ends
-        if isinstance(start, Source):
-            # only look for Sample ends if start is a Source
-            for end in [x for x in nx.algorithms.descendants(G, start) if
-                        isinstance(x, Sample) and len(G.out_edges(x)) == 0]:
-                paths += list(nx.algorithms.all_simple_paths(G, start, end))
-        elif isinstance(start, Sample):
-            # only look for Process ends if start is a Sample
-            for end in [x for x in nx.algorithms.descendants(G, start) if
-                        isinstance(x, Process) and x.next_process is None]:
-                paths += list(nx.algorithms.all_simple_paths(G, start, end))
+    for G in Gs:
+        G_start_nodes = [x for x in start_nodes if x in G.nodes()]
+        for start in G_start_nodes:
+            # Find ends
+            if isinstance(start, Source):
+                # only look for Sample ends if start is a Source
+                for end in [x for x in nx.algorithms.descendants(G, start) if
+                            isinstance(x, Sample)]:
+                    paths += list(nx.algorithms.all_simple_paths(G, start, end))
+            elif isinstance(start, Sample):
+                # only look for Process ends if start is a Sample
+                for end in [x for x in nx.algorithms.descendants(G, start) if
+                            isinstance(x, Process) and x.next_process is None]:
+                    paths += list(nx.algorithms.all_simple_paths(G, start, end))
+    
     # log.info("Found {} paths!".format(len(paths)))
     if len(paths) == 0:
         log.debug([x.name for x in start_nodes])
@@ -1180,10 +1183,17 @@ def write_study_table_files(inv_obj, output_dir):
         def flatten(l): return [item for sublist in l for item in sublist]
         columns = []
 
+        g = study_obj.graph.to_undirected()
+        components = [g.subgraph(c).copy() for c in nx.connected_components(g)]
+
         # start_nodes, end_nodes = _get_start_end_nodes(study_obj.graph)
         paths = _all_end_to_end_paths(
-            study_obj.graph,
+            components,
             [x for x in study_obj.graph.nodes() if isinstance(x, Source)])
+        sets = [set(l) for l in paths]
+        cleaned_paths = [l for l, s in zip(paths, sets) if not any(s < other for other in sets)]
+        paths = cleaned_paths
+
         sample_in_path_count = 0
         for node in _longest_path_and_attrs(paths):
             if isinstance(node, Source):
@@ -1372,10 +1382,12 @@ def write_assay_table_files(inv_obj, output_dir, write_factor_values=False):
             def flatten(l): return [item for sublist in l for item in sublist]
             columns = []
 
+            g = assay_obj.graph.to_undirected()
+            components = [g.subgraph(c).copy() for c in nx.connected_components(g)]
+
             # start_nodes, end_nodes = _get_start_end_nodes(assay_obj.graph)
             paths = _all_end_to_end_paths(
-                assay_obj.graph, [x for x in assay_obj.graph.nodes()
-                                  if isinstance(x, Sample)])
+                components, [x for x in g.nodes() if isinstance(x, Sample)])
             if len(paths) == 0:
                 log.info("No paths found, skipping writing assay file")
                 continue
