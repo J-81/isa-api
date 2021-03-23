@@ -82,8 +82,8 @@ class TestIsaTabDump(unittest.TestCase):
         self._tab_data_dir = utils.TAB_DATA_DIR
         self._tmp_dir = tempfile.mkdtemp()
 
-    def tearDown(self):
-        shutil.rmtree(self._tmp_dir)
+    # def tearDown(self):
+    #     shutil.rmtree(self._tmp_dir)
 
     def test_isatab_bad_i_file_name(self):
         with self.assertRaises(NameError):
@@ -504,6 +504,12 @@ class TestIsaTabDump(unittest.TestCase):
                 term_source=ncbitaxon,
                 term_accession="http://purl.bioontology.org/ontology/NCBITAXON/"
                                "9606"))
+        characteristic_organism = Characteristic(
+                category=OntologyAnnotation(term="TEST"),
+            value=OntologyAnnotation(
+                term="value_TEST",
+                term_source="",
+                term_accession=""))
 
         # Adding the description to the ISA Source Material:
         source.characteristics.append(characteristic_organism)
@@ -530,6 +536,49 @@ class TestIsaTabDump(unittest.TestCase):
 
         study.samples = batch_create_materials(prototype_sample, n=3)
         # creates a batch of 3 samples
+        characteristic_ontoTEST = Characteristic(
+                category=OntologyAnnotation(term="ontoTEST"),
+            value=OntologyAnnotation(
+                term="ontovalue_TEST",
+                term_source=uberon,
+                term_accession="http://stuff.com/id21"))
+        study.samples[0].characteristics.append(characteristic_ontoTEST)
+
+        characteristic_ontoTEST_2 = Characteristic(
+                category=OntologyAnnotation(term="ontoTEST_2"),
+            value=OntologyAnnotation(
+                term="",
+                term_source="",
+                term_accession=""))
+        study.samples[0].characteristics.append(characteristic_ontoTEST_2)
+
+        characteristic_ontoTEST_3 = Characteristic(
+                category=OntologyAnnotation(term="ontoTEST_3"),
+            value=OntologyAnnotation(
+                term="ontovalue_TEST_3",
+                term_source=uberon,
+                term_accession="wew"))
+
+        characteristic_ontoTEST_4 = Characteristic(
+                category=OntologyAnnotation(term="ontoTEST_3"),
+            value=OntologyAnnotation(term=""))
+
+        study.samples[0].characteristics.append(characteristic_ontoTEST_4)
+        study.samples[1].characteristics.append(characteristic_ontoTEST_4)
+        study.samples[2].characteristics.append(characteristic_ontoTEST_3)
+
+        characteristic_ontoTEST_5 = Characteristic(
+            category="ontoTEST_5",
+            value=OntologyAnnotation(term="TEST5",
+                                     term_source=uberon,
+                                     term_accession="wew"))
+
+        characteristic_ontoTEST_6 = Characteristic(
+            category="ontoTEST_5")
+
+        study.samples[0].characteristics.append(characteristic_ontoTEST_5)
+        study.samples[1].characteristics.append(characteristic_ontoTEST_5)
+        study.samples[2].characteristics.append(characteristic_ontoTEST_6)
 
         # Now we create a single Protocol object that represents our sample
         # collection protocol, and attach it to the study object. Protocols must be
@@ -750,8 +799,8 @@ class TestIsaTabLoad(unittest.TestCase):
         self._tab_data_dir = utils.TAB_DATA_DIR
         self._tmp_dir = tempfile.mkdtemp()
 
-    def tearDown(self):
-        shutil.rmtree(self._tmp_dir)
+    # def tearDown(self):
+    #     shutil.rmtree(self._tmp_dir)
 
     def test_isatab_load_issue323(self):
         with open(os.path.join(self._tab_data_dir, 'issue323', 'i_05.txt')) as fp:

@@ -1,0 +1,4 @@
+Sample Name	Comment[Sample ComText]	Protocol REF	Extract Name	Protocol REF	Raw Data File
+sample_material-0	is this real?	extraction-TEST	extract-0	sequencing-TEST	sequenced-data-0
+sample_material-1	is this real?	extraction-TEST	extract-1	sequencing-TEST	sequenced-data-1
+sample_material-2	is this real?	extraction-TEST	extract-2	sequencing-TEST	sequenced-data-2

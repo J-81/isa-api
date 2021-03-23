@@ -1,0 +1,4 @@
+Sample Name	Comment[Sample ComText]	Protocol REF	Extract Name	Protocol REF	Raw Data File
+sample_material-0	is this real?	methylated material extraction-TEST	methyl-extract-0	methylation sequencing-TEST	methyl-sequenced-data-0
+sample_material-1	is this real?	methylated material extraction-TEST	methyl-extract-1	methylation sequencing-TEST	methyl-sequenced-data-1
+sample_material-2	is this real?	methylated material extraction-TEST	methyl-extract-2	methylation sequencing-TEST	methyl-sequenced-data-2

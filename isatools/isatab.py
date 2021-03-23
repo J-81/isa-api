@@ -4603,7 +4603,8 @@ def load(isatab_path_or_ifile, skip_load_tables=False):
         :return: An OntologyAnnotation object
         """
         if val == '' and accession == '':
-            return None
+            # return None
+            return OntologyAnnotation(term="")
         else:
             return OntologyAnnotation(
                 term=val,

@@ -1,0 +1,8 @@
+Source Name	Characteristics[TEST]	Comment[Source Comment]	Protocol REF	Sample Name	Characteristics[OrganismPart]	Term Source REF	Term Accession Number	Characteristics[ontoTEST]	Term Source REF	Term Accession Number	Characteristics[ontoTEST_3]	Term Source REF	Term Accession Number	Characteristics[ontoTEST_5]	Term Source REF	Term Accession Number	Comment[Sample ComText]
+source_material	value_TEST	brilliant	sample collection-TEST	sample_material-0	liver	UBERON	http://purl.bioontology.org/ontology/UBERON/123245	ontovalue_TEST	UBERON	http://stuff.com/id21				TEST5	UBERON	wew	is this real?
+source_material	value_TEST	brilliant	sample collection-TEST	sample_material-1	liver	UBERON	http://purl.bioontology.org/ontology/UBERON/123245							TEST5	UBERON	wew	is this real?
+source_material	value_TEST	brilliant	sample collection-TEST	sample_material-2	liver	UBERON	http://purl.bioontology.org/ontology/UBERON/123245				ontovalue_TEST_3	UBERON	wew				is this real?
+																	
+																	
+																	
+																	

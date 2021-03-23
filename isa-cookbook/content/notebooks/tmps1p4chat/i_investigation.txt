@@ -1,0 +1,116 @@
+ONTOLOGY SOURCE REFERENCE
+Term Source Name	OBI	NCBITaxon	UBERON
+Term Source File			
+Term Source Version	1.0		
+Term Source Description	Ontology for Biomedical Investigations	NCBI Taxonomy	Uber Anatomy Ontology
+Comment[reasoning type]	using the reasoned version	unreasoned version	unreasoned version
+Comment[Ontology rating]	sweet	cool resource	resource tres froide
+Comment[organization]			obo
+INVESTIGATION
+Investigation Identifier	1
+Investigation Title	My Simple ISA Investigation
+Investigation Description	We could alternatively use the class constructor's parameters to set some default values at the time of creation, however we want to demonstrate how to use the object's instance variables to set values.
+Investigation Submission Date	2016-11-03
+Investigation Public Release Date	2016-11-03
+Comment[Investigation Start Date]	Venus
+INVESTIGATION PUBLICATIONS
+Investigation PubMed ID
+Investigation Publication DOI
+Investigation Publication Author List
+Investigation Publication Title
+Investigation Publication Status
+Investigation Publication Status Term Accession Number
+Investigation Publication Status Term Source REF
+INVESTIGATION CONTACTS
+Investigation Person Last Name	Cat
+Investigation Person First Name	Bob
+Investigation Person Mid Initials	
+Investigation Person Email	
+Investigation Person Phone	
+Investigation Person Fax	
+Investigation Person Address	
+Investigation Person Affiliation	University of Life
+Investigation Person Roles	submitter
+Investigation Person Roles Term Accession Number	
+Investigation Person Roles Term Source REF	
+Comment[Study Person comment]	cool person
+Comment[Study Person HR rating]	#1
+STUDY
+Study Identifier	1
+Study Title	My ISA Study
+Study Description	Like with the Investigation, we could use the class constructor to set some default values, but have chosen to demonstrate in this example the use of instance variables to set initial values.
+Study Submission Date	2016-11-03
+Study Public Release Date	2016-11-03
+Study File Name	s_study.txt
+Comment[Study Start Date]	Sun
+STUDY DESIGN DESCRIPTORS
+Study Design Type	intervention design	italian design	scandinavian design
+Study Design Type Term Accession Number	http://purl.obolibrary.org/obo/OBI_0000115		
+Study Design Type Term Source REF	OBI	OBI	OBI
+Comment[Study Design Descriptor]	Intelligent Study Design	smart design	minimalist design
+Comment[design rating]	rating 2	rating 4	rating 3
+Comment[critics]	terrible	awful	dreadful
+Comment[award]		London award	London award
+STUDY PUBLICATIONS
+Study PubMed ID	12345678	18888881
+Study Publication DOI		
+Study Publication Author List	A. Robertson, B. Robertson	C. Olsen, B. Lundgren
+Study Publication Title	Experiments with Elephants	Experiments with Bananas
+Study Publication Status	published	published
+Study Publication Status Term Accession Number		
+Study Publication Status Term Source REF		
+Comment[Study Publication Comment]	great manuscript	another great manuscript
+Comment[Study Publication addendum]	retracted manuscript	
+STUDY FACTORS
+Study Factor Name	treatment['modality']	duration
+Study Factor Type	treatment['modality']	time
+Study Factor Type Term Accession Number		
+Study Factor Type Term Source REF		
+Comment[Factor comment1]	Saturn	
+Comment[Factor comment3]	the 'wahoo' factor	
+Comment[Factor comment2]		2039-12-12
+STUDY ASSAYS
+Study Assay File Name	a_assay.txt	a_assay-methyl.txt
+Study Assay Measurement Type	transcription profiling	dna methylation profiling
+Study Assay Measurement Type Term Accession Number		
+Study Assay Measurement Type Term Source REF		
+Study Assay Technology Type	nucleotide sequencing	nucleotide sequencing
+Study Assay Technology Type Term Accession Number		
+Study Assay Technology Type Term Source REF		
+Study Assay Technology Platform		
+Comment[Assay Descriptor]	Intelligent Assay Design	Intelligent Methyl Assay Design
+Comment[Assay QC]	pass	fail
+Comment[Assay Safety]		health hazard
+STUDY PROTOCOLS
+Study Protocol Name	sample collection-TEST	extraction-TEST	methylated material extraction-TEST	sequencing-TEST	methylation sequencing-TEST
+Study Protocol Type	sample collection-TEST	material extraction-TEST	methylated material extraction-TEST	material sequencing	methylation sequencing
+Study Protocol Type Term Accession Number					
+Study Protocol Type Term Source REF					
+Study Protocol Description					
+Study Protocol URI					
+Study Protocol Version					
+Study Protocol Parameters Name	Collection Date;material description				
+Study Protocol Parameters Name Term Accession Number	;				
+Study Protocol Parameters Name Term Source REF	;				
+Study Protocol Components Name					
+Study Protocol Components Type					
+Study Protocol Components Type Term Accession Number					
+Study Protocol Components Type Term Source REF					
+Comment[Protocol Start Date]	Uranus				
+Comment[Protocol End Date]	not my pb				
+Comment[Protocol QC]	beta		alpha	none	
+Comment[Protocol Reuse Date]		2017-08-11			
+STUDY CONTACTS
+Study Person Last Name	Robertson	Cat
+Study Person First Name	Alice	Bob
+Study Person Mid Initials		
+Study Person Email		
+Study Person Phone		
+Study Person Fax		
+Study Person Address		
+Study Person Affiliation	University of Life	University of Life
+Study Person Roles	submitter	submitter
+Study Person Roles Term Accession Number		
+Study Person Roles Term Source REF		
+Comment[Study Person comment]	outstanding person	cool person
+Comment[Study Person HR rating]		#1
